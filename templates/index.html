@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarathiSense AI — Marathi Movie Review Sentiment Analysis</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Site Header -->
+    <header class="site-header fade-in">
+        <div class="header-inner">
+            <div class="brand">
+                <span class="brand-mark"><i class="fa-solid fa-film"></i></span>
+                <div class="brand-text">
+                    <span class="brand-name">MARATHISENSE AI</span>
+                    <span class="brand-tag">Cinematic Sentiment Intelligence</span>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="tech-badge primary"><i class="fa-solid fa-brain"></i> Naive Bayes</span>
+                <span class="tech-badge"><i class="fa-solid fa-layer-group"></i> TF-IDF</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+
+        <!-- Hero Branding -->
+        <section class="hero-brand fade-in fade-delay-1">
+            <h1 class="hero-heading">Decode the Emotion Behind Every Review.</h1>
+            <p class="hero-sub">AI-powered sentiment intelligence for Marathi movie reviews.</p>
+        </section>
+
+        <!-- Two-Column Dashboard -->
+        <div class="dashboard-grid fade-in fade-delay-2">
+
+            <!-- LEFT: Input Column -->
+            <div class="column-input glass-panel">
+                <div class="panel-header">
+                    <span class="panel-label">Review Input</span>
+                    <h2 class="panel-title">Submit Your Marathi Review</h2>
+                    <p class="panel-desc">Enter a Marathi movie review below. The interface is in English; only your review text should be in Marathi.</p>
+                </div>
+
+                <form method="POST" action="/" id="review-form" novalidate>
+                    <div class="textarea-container">
+                        <textarea
+                            id="review"
+                            name="review"
+                            rows="8"
+                            placeholder="Enter your Marathi movie review here..."
+                            spellcheck="false"
+                        >{{ review_text }}</textarea>
+                    </div>
+
+                    <div class="input-footer">
+                        <span id="char-counter" class="char-counter">0 characters</span>
+                        <span class="keyboard-hint"><i class="fa-solid fa-keyboard"></i> Ctrl + Enter</span>
+                    </div>
+
+                    <div id="error-message" class="error-banner hidden" role="alert">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>Please enter a Marathi movie review before analyzing.</span>
+                    </div>
+
+                    {% if result and result.error %}
+                    <div class="error-banner" role="alert">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>{{ result.error }}</span>
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" id="analyze-btn" class="analyze-btn">
+                        <span class="btn-text">Analyze Review <i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="btn-loader hidden">
+                            <span class="spinner"></span> Processing...
+                        </span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- RIGHT: Result Column -->
+            <div class="column-result glass-panel" id="result-panel">
+                {% if result and not result.error %}
+                <div class="result-content {{ result.sentiment|lower }}" id="prediction-result">
+                    <div class="panel-header">
+                        <span class="panel-label">Analysis Output</span>
+                        <h2 class="panel-title">Sentiment Prediction</h2>
+                    </div>
+
+                    <!-- Prediction Showcase -->
+                    <div class="prediction-showcase {{ result.sentiment|lower }}">
+                        <div class="showcase-ambient"></div>
+
+                        <div class="verdict-card">
+                            <div class="verdict-ring-wrap">
+                                <div class="verdict-ring {{ result.sentiment|lower }}">
+                                    <span class="ring-pulse"></span>
+                                    <span class="verdict-emoji">{{ result.emoji }}</span>
+                                </div>
+                            </div>
+                            <div class="verdict-details">
+                                <span class="verdict-label">Predicted Sentiment</span>
+                                <h3 class="verdict-sentiment {{ result.sentiment|lower }}">{{ result.sentiment }}</h3>
+                                <span class="verdict-chip {{ result.sentiment|lower }}">
+                                    <i class="fa-solid fa-circle-check"></i> Analysis Complete
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="confidence-viz">
+                            <div class="confidence-viz-top">
+                                <div class="confidence-viz-meta">
+                                    <span class="confidence-viz-title"><i class="fa-solid fa-gauge-high"></i> Confidence Score</span>
+                                    <span class="confidence-tier" id="confidence-tier"></span>
+                                </div>
+                                <div class="confidence-number-display">
+                                    <span class="confidence-number" id="confidence-number" data-value="{{ result.confidence }}">0</span>
+                                    <span class="confidence-unit">%</span>
+                                </div>
+                            </div>
+
+                            <div class="confidence-segments" id="confidence-segments" aria-hidden="true"></div>
+
+                            <div class="confidence-track-wrap">
+                                <div class="confidence-track">
+                                    <div class="confidence-fill-track">
+                                        <div class="confidence-fill confidence-fill-glow" data-value="{{ result.confidence }}"></div>
+                                        <div class="confidence-head" data-value="{{ result.confidence }}"></div>
+                                    </div>
+                                </div>
+                                <div class="confidence-scale">
+                                    <span>0</span>
+                                    <span>25</span>
+                                    <span>50</span>
+                                    <span>75</span>
+                                    <span>100</span>
+                                </div>
+                            </div>
+
+                            <p class="confidence-note">Score blends Naive Bayes probability with cosine similarity from similar TF-IDF patterns.</p>
+                        </div>
+                    </div>
+
+                    <div class="analysis-badges">
+                        <div class="badge-item">
+                            <span class="badge-tag primary">Primary Classifier</span>
+                            <span class="badge-name">Multinomial Naive Bayes</span>
+                        </div>
+                        <div class="badge-item">
+                            <span class="badge-tag">Feature Extraction</span>
+                            <span class="badge-name">TF-IDF</span>
+                        </div>
+                        <div class="badge-item">
+                            <span class="badge-tag secondary">Score Assist</span>
+                            <span class="badge-name">Cosine Similarity</span>
+                        </div>
+                    </div>
+
+                    <div class="review-preview">
+                        <span class="preview-label">Your Review</span>
+                        <p class="preview-text marathi-text">{{ review_text }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="result-placeholder">
+                    <div class="placeholder-icon"><i class="fa-solid fa-clapperboard"></i></div>
+                    <h3>Awaiting Analysis</h3>
+                    <p>Submit a Marathi movie review to see sentiment prediction and confidence score.</p>
+                    <div class="placeholder-badges">
+                        <span><i class="fa-solid fa-brain"></i> Multinomial Naive Bayes</span>
+                        <span><i class="fa-solid fa-layer-group"></i> TF-IDF</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="site-footer fade-in fade-delay-4">
+        <p>Built using Python, Flask, TF-IDF and Multinomial Naive Bayes.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
