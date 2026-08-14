@@ -1,11 +1,15 @@
 """
 Prediction utilities for Marathi movie review sentiment analysis.
 
-Loads pre-trained model and TF-IDF vectorizer from disk (no retraining).
-Cosine similarity on dataset TF-IDF vectors assists the final confidence score
-(blended with Multinomial Naive Bayes — NB remains the primary classifier).
+Loads pre-trained Multinomial Naive Bayes and Logistic Regression models
+alongside the TF-IDF vectorizer from disk.
+
+Provides independent predictions and confidence scores for both models,
+analyzes model agreement, and extracts top 3 similar dataset reviews
+using cosine similarity on TF-IDF representations.
 """
 
+import json
 import os
 import pickle
 
@@ -14,16 +18,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from preprocess import preprocess_corpus, preprocess_text
 
-MODEL_PATH = os.path.join("models", "sentiment_model.pkl")
+NB_MODEL_PATH = os.path.join("models", "sentiment_model.pkl")
+LR_MODEL_PATH = os.path.join("models", "logistic_regression_model.pkl")
 VECTORIZER_PATH = os.path.join("models", "tfidf_vectorizer.pkl")
+METRICS_PATH = os.path.join("models", "metrics.json")
 DATASET_PATH = os.path.join("dataset", "marathi_movie_reviews.csv")
 
-# NB is primary; cosine similarity assists the blended prediction score
-NB_WEIGHT = 0.75
-SIMILARITY_WEIGHT = 0.25
-TOP_K_NEIGHBORS = 15
-
-# Emoji labels for web display
+# Emoji labels for visual UI rendering
 SENTIMENT_EMOJI = {
     "Positive": "😊",
     "Negative": "☹️",
@@ -31,127 +32,171 @@ SENTIMENT_EMOJI = {
 
 
 class SentimentPredictor:
-    """Wrapper for loading saved artifacts and predicting sentiment."""
+    """Wrapper for loading dual ML models and executing sentiment prediction & NLP analysis."""
 
-    def __init__(self, model_path: str = MODEL_PATH, vectorizer_path: str = VECTORIZER_PATH):
-        self.model_path = model_path
+    def __init__(
+        self,
+        nb_path: str = NB_MODEL_PATH,
+        lr_path: str = LR_MODEL_PATH,
+        vectorizer_path: str = VECTORIZER_PATH,
+        metrics_path: str = METRICS_PATH,
+    ):
+        self.nb_path = nb_path
+        self.lr_path = lr_path
         self.vectorizer_path = vectorizer_path
-        self.model = None
+        self.metrics_path = metrics_path
+
+        self.nb_model = None
+        self.lr_model = None
         self.vectorizer = None
-        self.dataset_sentiments = None
+        self.metrics = None
+        self.dataset_reviews = []
+        self.dataset_sentiments = []
         self.dataset_tfidf = None
 
     def load(self) -> None:
-        """Load model, vectorizer, and dataset TF-IDF matrix for similarity scoring."""
-        if not os.path.exists(self.model_path):
+        """Load NB model, LR model, vectorizer, metrics, and build dataset TF-IDF matrix."""
+        if not os.path.exists(self.nb_path):
             raise FileNotFoundError(
-                f"Model not found at '{self.model_path}'. Run train_model.py first."
+                f"Naive Bayes model not found at '{self.nb_path}'. Run train_model.py first."
+            )
+        if not os.path.exists(self.lr_path):
+            raise FileNotFoundError(
+                f"Logistic Regression model not found at '{self.lr_path}'. Run train_model.py first."
             )
         if not os.path.exists(self.vectorizer_path):
             raise FileNotFoundError(
                 f"Vectorizer not found at '{self.vectorizer_path}'. Run train_model.py first."
             )
 
-        with open(self.model_path, "rb") as file:
-            self.model = pickle.load(file)
+        with open(self.nb_path, "rb") as file:
+            self.nb_model = pickle.load(file)
+
+        with open(self.lr_path, "rb") as file:
+            self.lr_model = pickle.load(file)
 
         with open(self.vectorizer_path, "rb") as file:
             self.vectorizer = pickle.load(file)
 
+        if os.path.exists(self.metrics_path):
+            with open(self.metrics_path, "r", encoding="utf-8") as file:
+                self.metrics = json.load(file)
+
         self._load_dataset_vectors()
 
     def _load_dataset_vectors(self) -> None:
-        """Build TF-IDF matrix for the dataset (used for cosine similarity scoring)."""
+        """Build TF-IDF matrix for the dataset for cosine similarity search."""
         if not os.path.exists(DATASET_PATH):
             raise FileNotFoundError(f"Dataset not found at '{DATASET_PATH}'.")
 
         df = pd.read_csv(DATASET_PATH)
         df = df.dropna(subset=["Review", "Sentiment"])
 
-        reviews = df["Review"].astype(str).tolist()
+        self.dataset_reviews = df["Review"].astype(str).tolist()
         self.dataset_sentiments = df["Sentiment"].astype(str).str.strip().tolist()
-        cleaned_corpus = preprocess_corpus(reviews)
+
+        cleaned_corpus = preprocess_corpus(self.dataset_reviews)
         self.dataset_tfidf = self.vectorizer.transform(cleaned_corpus)
 
-    def _similarity_sentiment_scores(self, features) -> tuple[float, float]:
-        """
-        Derive Positive/Negative scores from top similar dataset reviews.
+    def _predict_single_model(self, model, features) -> dict:
+        """Predict sentiment and extract confidence score from model probabilities."""
+        classes = list(model.classes_)
+        probs = model.predict_proba(features)[0]
 
-        Uses cosine similarity between TF-IDF vectors — assists the final score,
-        does not replace Naive Bayes classification.
-        """
-        similarities = cosine_similarity(features, self.dataset_tfidf)[0]
-        top_indices = similarities.argsort()[-TOP_K_NEIGHBORS:][::-1]
-        top_sims = similarities[top_indices]
+        prob_dict = {str(cls): float(prob) for cls, prob in zip(classes, probs)}
 
-        # Ignore zero-similarity neighbors
-        positive_weight = 0.0
-        negative_weight = 0.0
-        for idx, sim in zip(top_indices, top_sims):
-            if sim <= 0:
-                continue
-            if self.dataset_sentiments[idx] == "Positive":
-                positive_weight += sim
-            else:
-                negative_weight += sim
+        pos_prob = prob_dict.get("Positive", 0.0)
+        neg_prob = prob_dict.get("Negative", 0.0)
 
-        total = positive_weight + negative_weight
-        if total == 0:
-            return 0.5, 0.5
-
-        return positive_weight / total, negative_weight / total
-
-    def predict(self, review: str) -> dict:
-        """
-        Predict sentiment and blended confidence for a Marathi review.
-
-        Pipeline:
-            1. Preprocess → TF-IDF
-            2. Multinomial Naive Bayes probabilities (primary)
-            3. Cosine similarity scores from similar dataset reviews (assist)
-            4. Blend into final sentiment and confidence
-
-        Returns:
-            Dictionary with sentiment, emoji, confidence, and cleaned text.
-        """
-        if self.model is None or self.vectorizer is None:
-            raise RuntimeError("Model not loaded. Call load() before predict().")
-
-        cleaned = preprocess_text(review)
-        features = self.vectorizer.transform([cleaned])
-
-        # Primary classifier — Multinomial Naive Bayes
-        classes = list(self.model.classes_)
-        nb_probs = self.model.predict_proba(features)[0]
-        nb_scores = {label: prob for label, prob in zip(classes, nb_probs)}
-
-        nb_positive = nb_scores.get("Positive", 0.0)
-        nb_negative = nb_scores.get("Negative", 0.0)
-
-        # Assist — cosine similarity weighted sentiment from similar reviews
-        sim_positive, sim_negative = self._similarity_sentiment_scores(features)
-
-        # Blended prediction score
-        blended_positive = NB_WEIGHT * nb_positive + SIMILARITY_WEIGHT * sim_positive
-        blended_negative = NB_WEIGHT * nb_negative + SIMILARITY_WEIGHT * sim_negative
-
-        total = blended_positive + blended_negative
-        if total > 0:
-            blended_positive /= total
-            blended_negative /= total
-
-        if blended_positive >= blended_negative:
+        if pos_prob >= neg_prob:
             sentiment = "Positive"
-            confidence = blended_positive * 100
+            confidence = pos_prob * 100
         else:
             sentiment = "Negative"
-            confidence = blended_negative * 100
+            confidence = neg_prob * 100
 
         return {
             "sentiment": sentiment,
             "emoji": SENTIMENT_EMOJI.get(sentiment, ""),
             "confidence": round(confidence, 2),
+            "pos_prob": round(pos_prob * 100, 2),
+            "neg_prob": round(neg_prob * 100, 2),
+            "probabilities": prob_dict,
+        }
+
+    def _get_top_similar_reviews(self, features, top_k: int = 3) -> list:
+        """Find top-K most similar reviews from dataset using TF-IDF cosine similarity."""
+        similarities = cosine_similarity(features, self.dataset_tfidf)[0]
+        top_indices = similarities.argsort()[-top_k:][::-1]
+
+        similar_reviews = []
+        for idx in top_indices:
+            sim_score = float(similarities[idx])
+            similar_reviews.append(
+                {
+                    "review": self.dataset_reviews[idx],
+                    "sentiment": self.dataset_sentiments[idx],
+                    "similarity": round(sim_score * 100, 1),
+                    "emoji": SENTIMENT_EMOJI.get(self.dataset_sentiments[idx], ""),
+                }
+            )
+
+        return similar_reviews
+
+    def predict(self, review: str) -> dict:
+        """
+        Run independent predictions for Multinomial Naive Bayes and Logistic Regression.
+
+        Pipeline:
+            1. Preprocess review text -> TF-IDF vector
+            2. Predict Naive Bayes independently via predict_proba()
+            3. Predict Logistic Regression independently via predict_proba()
+            4. Evaluate model agreement
+            5. Retrieve top 3 dataset review matches via Cosine Similarity
+
+        Returns:
+            Dictionary containing independent model outputs, agreement status,
+            similar reviews, and model metrics.
+        """
+        if self.nb_model is None or self.lr_model is None or self.vectorizer is None:
+            raise RuntimeError("Models not loaded. Call load() before predict().")
+
+        cleaned = preprocess_text(review)
+        features = self.vectorizer.transform([cleaned])
+
+        # 1. Naive Bayes Independent Prediction
+        nb_result = self._predict_single_model(self.nb_model, features)
+        nb_result["name"] = "Multinomial Naive Bayes"
+        nb_result["role"] = "Primary Classifier"
+
+        # 2. Logistic Regression Independent Prediction
+        lr_result = self._predict_single_model(self.lr_model, features)
+        lr_result["name"] = "Logistic Regression"
+        lr_result["role"] = "Secondary Classifier"
+
+        # 3. Model Agreement Analysis
+        is_agree = nb_result["sentiment"] == lr_result["sentiment"]
+        agreement = {
+            "is_agree": is_agree,
+            "status_label": "✓ Both models agree" if is_agree else "⚠ Models disagree",
+            "message": (
+                "Both models agree on the sentiment."
+                if is_agree
+                else "The models produced different predictions. Review the confidence scores and model comparison."
+            ),
+        }
+
+        # 4. Cosine Similarity Top 3 Similar Reviews
+        similar_reviews = self._get_top_similar_reviews(features, top_k=3)
+
+        return {
+            "review_text": review,
             "cleaned_text": cleaned,
+            "naive_bayes": nb_result,
+            "logistic_regression": lr_result,
+            "agreement": agreement,
+            "similar_reviews": similar_reviews,
+            "metrics": self.metrics,
         }
 
 
@@ -160,12 +205,13 @@ _predictor = SentimentPredictor()
 
 
 def get_predictor() -> SentimentPredictor:
-    """Return a loaded predictor instance (lazy load on first call)."""
-    if _predictor.model is None:
+    """Return loaded predictor instance (lazy load on first call)."""
+    if _predictor.nb_model is None:
         _predictor.load()
     return _predictor
 
 
 def predict_sentiment(review: str) -> dict:
-    """Convenience function to predict sentiment for a single review."""
+    """Convenience function to run dual prediction for a single review."""
     return get_predictor().predict(review)
+

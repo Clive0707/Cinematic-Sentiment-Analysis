@@ -1,14 +1,16 @@
 """
-Train Multinomial Naive Bayes sentiment classifier on Marathi movie reviews.
+Train Multinomial Naive Bayes and Logistic Regression sentiment classifiers on Marathi movie reviews.
 
-Reads the dataset, preprocesses text, vectorizes with TF-IDF, trains the model,
-evaluates performance, and saves artifacts to the models/ directory.
+Reads the dataset, preprocesses text, vectorizes with TF-IDF, trains both models,
+evaluates performance, and saves model artifacts and metrics to the models/ directory.
 """
 
+import json
 import os
 import pickle
 
 import pandas as pd
+from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import (
     accuracy_score,
@@ -25,8 +27,10 @@ from preprocess import preprocess_corpus
 
 # Paths relative to project root
 DATASET_PATH = os.path.join("dataset", "marathi_movie_reviews.csv")
-MODEL_PATH = os.path.join("models", "sentiment_model.pkl")
+NB_MODEL_PATH = os.path.join("models", "sentiment_model.pkl")
+LR_MODEL_PATH = os.path.join("models", "logistic_regression_model.pkl")
 VECTORIZER_PATH = os.path.join("models", "tfidf_vectorizer.pkl")
+METRICS_PATH = os.path.join("models", "metrics.json")
 
 # Reproducible split
 RANDOM_STATE = 42
@@ -54,8 +58,45 @@ def save_pickle(obj, path: str) -> None:
         pickle.dump(obj, file)
 
 
+def evaluate_model(model, X_test, y_test, name: str) -> dict:
+    """Evaluate a classifier model on test set and return metric dictionary."""
+    y_pred = model.predict(X_test)
+
+    accuracy = float(accuracy_score(y_test, y_pred))
+    precision = float(precision_score(y_test, y_pred, pos_label="Positive", zero_division=0))
+    recall = float(recall_score(y_test, y_pred, pos_label="Positive", zero_division=0))
+    f1 = float(f1_score(y_test, y_pred, pos_label="Positive", zero_division=0))
+    cm = confusion_matrix(y_test, y_pred, labels=["Negative", "Positive"]).tolist()
+    report = classification_report(y_test, y_pred)
+
+    print("\n" + "=" * 50)
+    print(f"EVALUATION: {name.upper()}")
+    print("=" * 50)
+    print(f"Accuracy  : {accuracy * 100:.2f}%")
+    print(f"Precision : {precision * 100:.2f}%")
+    print(f"Recall    : {recall * 100:.2f}%")
+    print(f"F1 Score  : {f1 * 100:.2f}%")
+    print("\nConfusion Matrix (rows=actual, cols=predicted):")
+    print("Labels: [Negative, Positive]")
+    print(cm)
+    print("\nClassification Report:")
+    print(report)
+
+    return {
+        "name": name,
+        "accuracy": round(accuracy * 100, 2),
+        "precision": round(precision * 100, 2),
+        "recall": round(recall * 100, 2),
+        "f1_score": round(f1 * 100, 2),
+        "raw_accuracy": accuracy,
+        "raw_precision": precision,
+        "raw_recall": recall,
+        "raw_f1_score": f1,
+    }
+
+
 def train_and_evaluate() -> None:
-    """Full training pipeline: preprocess, vectorize, train, evaluate, save."""
+    """Full training pipeline: preprocess, vectorize, train NB & LR, evaluate, save."""
     print("Loading dataset...")
     df = load_dataset(DATASET_PATH)
     print(f"Loaded {len(df)} reviews.")
@@ -76,40 +117,39 @@ def train_and_evaluate() -> None:
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_test_tfidf = vectorizer.transform(X_test)
 
-    print("Training Multinomial Naive Bayes classifier...")
-    model = MultinomialNB()
-    model.fit(X_train_tfidf, y_train)
+    print("1. Training Multinomial Naive Bayes classifier (Primary)...")
+    nb_model = MultinomialNB()
+    nb_model.fit(X_train_tfidf, y_train)
+    nb_metrics = evaluate_model(nb_model, X_test_tfidf, y_test, "Multinomial Naive Bayes")
 
-    print("Evaluating on test set...")
-    y_pred = model.predict(X_test_tfidf)
+    print("2. Training Logistic Regression classifier (Secondary)...")
+    lr_model = LogisticRegression(max_iter=1000, random_state=RANDOM_STATE)
+    lr_model.fit(X_train_tfidf, y_train)
+    lr_metrics = evaluate_model(lr_model, X_test_tfidf, y_test, "Logistic Regression")
 
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred, pos_label="Positive", zero_division=0)
-    recall = recall_score(y_test, y_pred, pos_label="Positive", zero_division=0)
-    f1 = f1_score(y_test, y_pred, pos_label="Positive", zero_division=0)
-    cm = confusion_matrix(y_test, y_pred, labels=["Negative", "Positive"])
-    report = classification_report(y_test, y_pred)
+    metrics_payload = {
+        "naive_bayes": nb_metrics,
+        "logistic_regression": lr_metrics,
+        "test_samples": len(y_test),
+        "train_samples": len(y_train),
+        "vocab_size": len(vectorizer.vocabulary_),
+    }
 
-    print("\n" + "=" * 50)
-    print("MODEL EVALUATION RESULTS")
-    print("=" * 50)
-    print(f"Accuracy  : {accuracy:.4f}")
-    print(f"Precision : {precision:.4f}")
-    print(f"Recall    : {recall:.4f}")
-    print(f"F1 Score  : {f1:.4f}")
-    print("\nConfusion Matrix (rows=actual, cols=predicted):")
-    print("Labels: [Negative, Positive]")
-    print(cm)
-    print("\nClassification Report:")
-    print(report)
-
-    print("Saving model and vectorizer...")
-    save_pickle(model, MODEL_PATH)
+    print("\nSaving models, vectorizer, and metrics JSON...")
+    save_pickle(nb_model, NB_MODEL_PATH)
+    save_pickle(lr_model, LR_MODEL_PATH)
     save_pickle(vectorizer, VECTORIZER_PATH)
-    print(f"Model saved to: {MODEL_PATH}")
+
+    with open(METRICS_PATH, "w", encoding="utf-8") as f:
+        json.dump(metrics_payload, f, indent=2)
+
+    print(f"NB Model saved to: {NB_MODEL_PATH}")
+    print(f"LR Model saved to: {LR_MODEL_PATH}")
     print(f"Vectorizer saved to: {VECTORIZER_PATH}")
+    print(f"Metrics saved to: {METRICS_PATH}")
     print("\nTraining complete!")
 
 
 if __name__ == "__main__":
     train_and_evaluate()
+

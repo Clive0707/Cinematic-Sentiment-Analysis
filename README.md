@@ -1,44 +1,90 @@
 # Marathi Movie Review Sentiment Analysis
 
-A complete sentiment analysis web application for **Marathi movie reviews**, built with Python, Flask, and Multinomial Naive Bayes.
+A comprehensive dual-supervised machine learning web application for **Marathi movie review sentiment analysis**, built using Python, Flask, TF-IDF vectorization, **Multinomial Naive Bayes**, and **Logistic Regression**.
 
-## Project Structure
+---
+
+## 📷 Screenshots & Interface Showcase
+
+### 1. Review Input & Main Dashboard
+Enter Marathi movie reviews or select sample review presets to initiate analysis.
+
+![Review Input Dashboard](docs/images/review_input.png)
+
+---
+
+### 2. Dual Independent Predictions & Model Agreement
+Independent predictions from **Multinomial Naive Bayes** (Primary) and **Logistic Regression** (Secondary) alongside model confidence percentages and agreement status.
+
+![Dual Model Predictions](docs/images/dual_model_predictions.png)
+
+---
+
+### 3. Model Performance Benchmark Comparison
+Interactive comparison view displaying test set evaluation metrics (Accuracy, Precision, Recall, F1 Score) and visual metric charts.
+
+![Model Performance Comparison](docs/images/model_performance_comparison.png)
+
+---
+
+### 4. Downloadable PDF Analysis Report
+Export complete sentiment analysis reports in PDF format with native Devanagari font rendering (`Nirmala.ttc`).
+
+![PDF Analysis Report](docs/images/pdf_analysis_report.png)
+
+---
+
+## 📁 Project Structure
 
 ```
 project/
 │
 ├── dataset/
-│   └── marathi_movie_reviews.csv
+│   └── marathi_movie_reviews.csv       # 1,000 Marathi movie reviews dataset
+│
+├── docs/
+│   └── images/                         # Dashboard & PDF screenshots
+│       ├── review_input.png
+│       ├── dual_model_predictions.png
+│       ├── model_performance_comparison.png
+│       └── pdf_analysis_report.png
 │
 ├── models/
-│   ├── sentiment_model.pkl
-│   └── tfidf_vectorizer.pkl
+│   ├── sentiment_model.pkl             # Multinomial Naive Bayes model
+│   ├── logistic_regression_model.pkl   # Logistic Regression model
+│   ├── tfidf_vectorizer.pkl            # TF-IDF vectorizer
+│   └── metrics.json                    # Saved test set evaluation metrics
 │
 ├── templates/
-│   └── index.html
+│   └── index.html                      # Cinematic dark mode dashboard
 │
 ├── static/
-│   ├── style.css
-│   └── script.js
+│   ├── style.css                       # Responsive CSS styles & glassmorphism
+│   └── script.js                       # Tab navigation & frontend interaction
 │
-├── preprocess.py
-├── train_model.py
-├── predict.py
-├── app.py
-├── requirements.txt
-└── README.md
+├── preprocess.py                       # Devanagari text cleaning & Marathi stopwords
+├── train_model.py                      # Model training & evaluation pipeline
+├── predict.py                         # Independent dual-model prediction engine
+├── pdf_generator.py                    # PDF report builder using ReportLab
+├── app.py                             # Flask web app & API endpoints
+├── requirements.txt                    # Project dependencies
+└── README.md                           # Project documentation
 ```
 
-## Dataset
+---
+
+## 📊 Dataset Overview
 
 - **File:** `dataset/marathi_movie_reviews.csv`
-- **Rows:** 1000
+- **Rows:** 1,000
 - **Columns:** `Review`, `Sentiment`
 - **Classes:** Positive, Negative
 
-## Setup
+---
 
-1. **Create a virtual environment (recommended):**
+## ⚙️ Setup & Installation
+
+1. **Create and activate a virtual environment (recommended):**
 
    ```bash
    python -m venv venv
@@ -52,21 +98,22 @@ project/
    pip install -r requirements.txt
    ```
 
-3. **Train the model:**
+3. **Train the models (creates pickles in `models/`):**
 
    ```bash
    python train_model.py
    ```
 
-   This will:
-   - Preprocess Marathi reviews (remove punctuation, numbers, stopwords)
+   This pipeline will:
+   - Clean Marathi text (preserve Devanagari Unicode, remove noise & stopwords)
    - Vectorize text using TF-IDF
-   - Split data 80/20 (random_state=42)
-   - Train Multinomial Naive Bayes
-   - Print accuracy, precision, recall, F1, confusion matrix, and classification report
-   - Save `models/sentiment_model.pkl` and `models/tfidf_vectorizer.pkl`
+   - Perform an 80/20 stratified split (`random_state=42`)
+   - Train **Multinomial Naive Bayes** (`sentiment_model.pkl`)
+   - Train **Logistic Regression** (`logistic_regression_model.pkl`)
+   - Evaluate Accuracy, Precision, Recall, F1 Score on test set
+   - Save metrics to `models/metrics.json`
 
-4. **Run the Flask web app:**
+4. **Run the Flask web server:**
 
    ```bash
    python app.py
@@ -78,36 +125,41 @@ project/
    http://127.0.0.1:5000
    ```
 
-## Usage
+---
 
-1. Enter a Marathi movie review in the text box.
-2. Click **Predict**.
-3. View the result:
-   - **Positive** 😊 or **Negative** ☹️
-   - Prediction confidence percentage
+## 🚀 Key Features
 
-## Modules
+1. **Dual Independent Classification**:
+   - **Multinomial Naive Bayes** (Primary Classifier)
+   - **Logistic Regression** (Secondary Classifier)
+   - Predictions and confidence scores derived strictly from `predict_proba()`.
+
+2. **Model Agreement Indicator**:
+   - Automatically determines whether both classifiers agree (`✓ Both models agree`) or produce conflicting predictions (`⚠ Models disagree`).
+
+3. **TF-IDF Cosine Similarity Matches**:
+   - NLP feature extracting top 3 dataset review matches with similarity percentages.
+
+4. **Professional PDF Reports**:
+   - One-click PDF generation featuring native Devanagari font rendering.
+
+5. **Cinematic Dark Mode Dashboard**:
+   - Responsive tabbed navigation (**Analyze**, **Model Comparison**, **About the Model**).
+
+---
+
+## 📦 Modules Description
 
 | File | Description |
 |------|-------------|
-| `preprocess.py` | Text cleaning and Marathi stopword removal |
-| `train_model.py` | Dataset loading, training, evaluation, model saving |
-| `predict.py` | Load saved model and predict sentiment |
-| `app.py` | Flask web server (loads model from disk, no retraining) |
+| `preprocess.py` | Marathi Devanagari text normalization and stopword filtering |
+| `train_model.py` | Training & benchmark evaluation for Naive Bayes and Logistic Regression |
+| `predict.py` | Dual model prediction engine and TF-IDF Cosine Similarity retrieval |
+| `pdf_generator.py` | PDF document generation using ReportLab |
+| `app.py` | Flask web server, API routes, and PDF download endpoint |
 
-## Model Pipeline
+---
 
-1. **Preprocessing** — Keep Devanagari Unicode, strip punctuation/numbers/special chars, remove stopwords
-2. **Feature extraction** — TF-IDF Vectorizer
-3. **Classifier** — Multinomial Naive Bayes
-4. **Evaluation** — Accuracy, Precision, Recall, F1, Confusion Matrix, Classification Report
+## 📜 License
 
-## Notes
-
-- The Flask app loads the pre-trained model at startup and does **not** retrain.
-- Run `train_model.py` before starting the web app for the first time.
-- Marathi text is preserved using the Devanagari Unicode range (U+0900–U+097F).
-
-## License
-
-MIT
+MIT License

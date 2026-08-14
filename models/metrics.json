@@ -1,0 +1,27 @@
+{
+  "naive_bayes": {
+    "name": "Multinomial Naive Bayes",
+    "accuracy": 99.5,
+    "precision": 100.0,
+    "recall": 99.0,
+    "f1_score": 99.5,
+    "raw_accuracy": 0.995,
+    "raw_precision": 1.0,
+    "raw_recall": 0.99,
+    "raw_f1_score": 0.9949748743718593
+  },
+  "logistic_regression": {
+    "name": "Logistic Regression",
+    "accuracy": 99.0,
+    "precision": 100.0,
+    "recall": 98.0,
+    "f1_score": 98.99,
+    "raw_accuracy": 0.99,
+    "raw_precision": 1.0,
+    "raw_recall": 0.98,
+    "raw_f1_score": 0.98989898989899
+  },
+  "test_samples": 200,
+  "train_samples": 800,
+  "vocab_size": 172
+}
