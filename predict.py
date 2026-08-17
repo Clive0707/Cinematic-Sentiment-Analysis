@@ -26,8 +26,8 @@ DATASET_PATH = os.path.join("dataset", "marathi_movie_reviews.csv")
 
 # Emoji labels for visual UI rendering
 SENTIMENT_EMOJI = {
-    "Positive": "😊",
-    "Negative": "☹️",
+    "Positive": "",
+    "Negative": "",
 }
 
 
