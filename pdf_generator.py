@@ -171,41 +171,48 @@ def generate_sentiment_pdf(result: dict) -> bytes:
     story.append(review_table)
     story.append(Spacer(1, 10))
 
-    # 2 & 3. Model Results Section
+    # 2. Supervised Model Predictions & Class Probability Distributions
     nb = result.get("naive_bayes", {})
     lr = result.get("logistic_regression", {})
 
-    story.append(Paragraph("2. Supervised Model Predictions", section_heading))
+    story.append(Paragraph("2. Supervised Model Predictions & Probability Distributions", section_heading))
 
     nb_sent = nb.get("sentiment", "N/A")
     nb_conf = nb.get("confidence", 0.0)
+    nb_pos = nb.get("pos_prob", 0.0)
+    nb_neg = nb.get("neg_prob", 0.0)
     nb_color = "#16a34a" if nb_sent == "Positive" else "#dc2626"
 
     lr_sent = lr.get("sentiment", "N/A")
     lr_conf = lr.get("confidence", 0.0)
+    lr_pos = lr.get("pos_prob", 0.0)
+    lr_neg = lr.get("neg_prob", 0.0)
     lr_color = "#16a34a" if lr_sent == "Positive" else "#dc2626"
 
     model_table_data = [
         [
             Paragraph("Algorithm", table_header_style),
-            Paragraph("Role", table_header_style),
             Paragraph("Prediction", table_header_style),
-            Paragraph("Confidence Score", table_header_style),
+            Paragraph("Positive Prob", table_header_style),
+            Paragraph("Negative Prob", table_header_style),
+            Paragraph("Winning Confidence", table_header_style),
         ],
         [
-            Paragraph("<b>Multinomial Naive Bayes</b>", table_cell_bold),
-            Paragraph("Primary Classifier", table_cell_style),
+            Paragraph("<b>Multinomial Naive Bayes</b><br/><font color='#64748b' size='7.5'>Primary Classifier</font>", table_cell_style),
             Paragraph(f"<font color='{nb_color}'><b>{nb_sent}</b></font>", table_cell_bold),
+            Paragraph(f"<font color='#16a34a'><b>{nb_pos:.1f}%</b></font>", table_cell_style),
+            Paragraph(f"<font color='#dc2626'><b>{nb_neg:.1f}%</b></font>", table_cell_style),
             Paragraph(f"<b>{nb_conf:.1f}%</b>", table_cell_bold),
         ],
         [
-            Paragraph("<b>Logistic Regression</b>", table_cell_bold),
-            Paragraph("Secondary Classifier", table_cell_style),
+            Paragraph("<b>Logistic Regression</b><br/><font color='#64748b' size='7.5'>Secondary Classifier</font>", table_cell_style),
             Paragraph(f"<font color='{lr_color}'><b>{lr_sent}</b></font>", table_cell_bold),
+            Paragraph(f"<font color='#16a34a'><b>{lr_pos:.1f}%</b></font>", table_cell_style),
+            Paragraph(f"<font color='#dc2626'><b>{lr_neg:.1f}%</b></font>", table_cell_style),
             Paragraph(f"<b>{lr_conf:.1f}%</b>", table_cell_bold),
         ],
     ]
-    model_table = Table(model_table_data, colWidths=[160, 120, 130, 130])
+    model_table = Table(model_table_data, colWidths=[150, 95, 95, 95, 105])
     model_table.setStyle(
         TableStyle(
             [
@@ -213,7 +220,7 @@ def generate_sentiment_pdf(result: dict) -> bytes:
                 ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#ffffff")),
                 ("BACKGROUND", (0, 2), (-1, 2), colors.HexColor("#f8fafc")),
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
-                ("PADDING", (0, 0), (-1, -1), 8),
+                ("PADDING", (0, 0), (-1, -1), 7),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ]
         )
@@ -221,18 +228,86 @@ def generate_sentiment_pdf(result: dict) -> bytes:
     story.append(model_table)
     story.append(Spacer(1, 10))
 
-    # 4. Model Agreement Section
-    story.append(Paragraph("3. Model Agreement Analysis", section_heading))
+    # 3. Model Explainability & Feature Evidence
+    story.append(Paragraph("3. Model Score Justification & Feature Evidence", section_heading))
+
+    nb_exp = nb.get("explanation", {})
+    nb_pos_words = [f"+ {f['word']}" for f in nb.get("positive_features", [])]
+    nb_neg_words = [f"- {f['word']}" for f in nb.get("negative_features", [])]
+
+    lr_exp = lr.get("explanation", {})
+    lr_pos_words = [f"+ {f['word']}" for f in lr.get("positive_features", [])]
+    lr_neg_words = [f"- {f['word']}" for f in lr.get("negative_features", [])]
+
+    explain_data = [
+        [
+            Paragraph("<b>Model</b>", table_header_style),
+            Paragraph("<b>Why this confidence score? (Statistical Probability)</b>", table_header_style),
+            Paragraph("<b>Feature Evidence (Model Weights)</b>", table_header_style),
+        ],
+        [
+            Paragraph("<b>Multinomial<br/>Naive Bayes</b>", table_cell_bold),
+            Paragraph(
+                f"{nb_exp.get('summary_text', '')}<br/><br/>"
+                f"<b>Probability Allocation:</b> {nb_exp.get('remaining_explanation', '')}",
+                body_style,
+            ),
+            Paragraph(
+                f"<b>Positive Indicators:</b><br/>"
+                f"<font color='#16a34a'>{', '.join(nb_pos_words) if nb_pos_words else 'None'}</font><br/><br/>"
+                f"<b>Negative Indicators:</b><br/>"
+                f"<font color='#dc2626'>{', '.join(nb_neg_words) if nb_neg_words else 'None'}</font>",
+                table_cell_style,
+            ),
+        ],
+        [
+            Paragraph("<b>Logistic<br/>Regression</b>", table_cell_bold),
+            Paragraph(
+                f"{lr_exp.get('summary_text', '')}<br/><br/>"
+                f"<b>Probability Allocation:</b> {lr_exp.get('remaining_explanation', '')}",
+                body_style,
+            ),
+            Paragraph(
+                f"<b>Positive Indicators:</b><br/>"
+                f"<font color='#16a34a'>{', '.join(lr_pos_words) if lr_pos_words else 'None'}</font><br/><br/>"
+                f"<b>Negative Indicators:</b><br/>"
+                f"<font color='#dc2626'>{', '.join(lr_neg_words) if lr_neg_words else 'None'}</font>",
+                table_cell_style,
+            ),
+        ],
+    ]
+    explain_table = Table(explain_data, colWidths=[90, 240, 210])
+    explain_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#ffffff")),
+                ("BACKGROUND", (0, 2), (-1, 2), colors.HexColor("#f8fafc")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
+                ("PADDING", (0, 0), (-1, -1), 7),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
+    )
+    story.append(explain_table)
+    story.append(Spacer(1, 10))
+
+    # 4. Model Agreement & Confidence Difference Section
+    story.append(Paragraph("4. Model Agreement & Confidence Difference Analysis", section_heading))
     agreement = result.get("agreement", {})
     is_agree = agreement.get("is_agree", True)
     status_label = agreement.get("status_label", "N/A")
     msg = agreement.get("message", "")
+    diff_text = agreement.get("diff_text", "")
 
     bg_color = "#f0fdf4" if is_agree else "#fffbeb"
     border_color = "#86efac" if is_agree else "#fde68a"
     text_color = "#15803d" if is_agree else "#b45309"
 
-    agree_html = f"<font color='{text_color}'><b>{status_label}</b> &bull; {msg}</font>"
+    agree_html = (
+        f"<font color='{text_color}'><b>{status_label}</b> &bull; {msg}</font><br/>"
+        f"<font color='#4338ca'><b>Confidence Comparison:</b> {diff_text}</font>"
+    )
     agree_table_data = [[Paragraph(agree_html, body_style)]]
     agree_table = Table(agree_table_data, colWidths=[540])
     agree_table.setStyle(

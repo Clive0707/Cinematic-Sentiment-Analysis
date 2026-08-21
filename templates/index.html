@@ -24,11 +24,10 @@
                 </div>
             </div>
 
-            <!-- Navigation Tabs (3 Core Sections) -->
+            <!-- Navigation Tabs (2 Core Sections) -->
             <nav class="nav-tabs" aria-label="Main Navigation">
                 <button class="nav-tab active" data-tab="analyze"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyze</button>
                 <button class="nav-tab" data-tab="comparison"><i class="fa-solid fa-chart-simple"></i> Model Comparison</button>
-                <button class="nav-tab" data-tab="about"><i class="fa-solid fa-circle-info"></i> About the Model</button>
             </nav>
 
             <div class="header-badges">
@@ -143,26 +142,84 @@
                             </div>
                         </div>
 
+                        <!-- Class Probability Distribution Box -->
                         <div class="confidence-box">
                             <div class="confidence-header">
-                                <span class="conf-title">Confidence</span>
-                                <span class="conf-percent">{{ result.naive_bayes.confidence }}%</span>
+                                <span class="conf-title"><i class="fa-solid fa-chart-pie"></i> Probability Distribution</span>
+                                <span class="conf-percent">Winning Confidence: {{ result.naive_bayes.confidence }}%</span>
                             </div>
-                            <div class="progress-bar-wrap">
-                                <div class="progress-bar-fill {{ result.naive_bayes.sentiment|lower }}" style="width: {{ result.naive_bayes.confidence }}%;"></div>
+
+                            <div class="dist-row">
+                                <span class="dist-label positive-text">Positive</span>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill positive" style="width: {{ result.naive_bayes.pos_prob }}%;"></div>
+                                </div>
+                                <span class="dist-val">{{ result.naive_bayes.pos_prob }}%</span>
+                            </div>
+
+                            <div class="dist-row">
+                                <span class="dist-label negative-text">Negative</span>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill negative" style="width: {{ result.naive_bayes.neg_prob }}%;"></div>
+                                </div>
+                                <span class="dist-val">{{ result.naive_bayes.neg_prob }}%</span>
                             </div>
                         </div>
 
-                        <div class="prob-breakdown">
-                            <div class="prob-item">
-                                <span>Positive Prob:</span>
-                                <strong>{{ result.naive_bayes.pos_prob }}%</strong>
-                            </div>
-                            <div class="prob-item">
-                                <span>Negative Prob:</span>
-                                <strong>{{ result.naive_bayes.neg_prob }}%</strong>
-                            </div>
+                        <!-- Explainability Accordion -->
+                        <div class="explain-accordion">
+                            <details class="explain-details">
+                                <summary class="explain-summary">
+                                    <span><i class="fa-solid fa-circle-question"></i> Why this confidence score?</span>
+                                    <i class="fa-solid fa-chevron-down summary-icon"></i>
+                                </summary>
+                                <div class="explain-body">
+                                    <p class="explain-text">
+                                        {{ result.naive_bayes.explanation.summary_text }}
+                                    </p>
+                                    <p class="explain-text highlight-explain">
+                                        {{ result.naive_bayes.explanation.remaining_explanation }}
+                                    </p>
+                                    <p class="explain-subtext">
+                                        <i class="fa-solid fa-database"></i> {{ result.naive_bayes.explanation.statistical_basis }}
+                                    </p>
+                                </div>
+                            </details>
+
+                            <details class="explain-details">
+                                <summary class="explain-summary">
+                                    <span><i class="fa-solid fa-list-check"></i> Feature Evidence (Model Weights)</span>
+                                    <i class="fa-solid fa-chevron-down summary-icon"></i>
+                                </summary>
+                                <div class="explain-body">
+                                    <div class="feature-group">
+                                        <span class="feature-group-title positive-text"><i class="fa-solid fa-plus-circle"></i> Positive Indicators:</span>
+                                        <div class="feature-chips">
+                                            {% if result.naive_bayes.positive_features %}
+                                                {% for f in result.naive_bayes.positive_features %}
+                                                    <span class="feature-chip pos-chip">+ {{ f.word }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="feature-none">No strong positive indicators in input</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="feature-group">
+                                        <span class="feature-group-title negative-text"><i class="fa-solid fa-minus-circle"></i> Negative Indicators:</span>
+                                        <div class="feature-chips">
+                                            {% if result.naive_bayes.negative_features %}
+                                                {% for f in result.naive_bayes.negative_features %}
+                                                    <span class="feature-chip neg-chip">- {{ f.word }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="feature-none">No strong negative indicators in input</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
                         </div>
+
                     </div>
 
                     <!-- Model 2: Logistic Regression Card -->
@@ -181,26 +238,84 @@
                             </div>
                         </div>
 
+                        <!-- Class Probability Distribution Box -->
                         <div class="confidence-box">
                             <div class="confidence-header">
-                                <span class="conf-title">Confidence</span>
-                                <span class="conf-percent">{{ result.logistic_regression.confidence }}%</span>
+                                <span class="conf-title"><i class="fa-solid fa-chart-pie"></i> Probability Distribution</span>
+                                <span class="conf-percent">Winning Confidence: {{ result.logistic_regression.confidence }}%</span>
                             </div>
-                            <div class="progress-bar-wrap">
-                                <div class="progress-bar-fill {{ result.logistic_regression.sentiment|lower }}" style="width: {{ result.logistic_regression.confidence }}%;"></div>
+
+                            <div class="dist-row">
+                                <span class="dist-label positive-text">Positive</span>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill positive" style="width: {{ result.logistic_regression.pos_prob }}%;"></div>
+                                </div>
+                                <span class="dist-val">{{ result.logistic_regression.pos_prob }}%</span>
+                            </div>
+
+                            <div class="dist-row">
+                                <span class="dist-label negative-text">Negative</span>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill negative" style="width: {{ result.logistic_regression.neg_prob }}%;"></div>
+                                </div>
+                                <span class="dist-val">{{ result.logistic_regression.neg_prob }}%</span>
                             </div>
                         </div>
 
-                        <div class="prob-breakdown">
-                            <div class="prob-item">
-                                <span>Positive Prob:</span>
-                                <strong>{{ result.logistic_regression.pos_prob }}%</strong>
-                            </div>
-                            <div class="prob-item">
-                                <span>Negative Prob:</span>
-                                <strong>{{ result.logistic_regression.neg_prob }}%</strong>
-                            </div>
+                        <!-- Explainability Accordion -->
+                        <div class="explain-accordion">
+                            <details class="explain-details">
+                                <summary class="explain-summary">
+                                    <span><i class="fa-solid fa-circle-question"></i> Why this confidence score?</span>
+                                    <i class="fa-solid fa-chevron-down summary-icon"></i>
+                                </summary>
+                                <div class="explain-body">
+                                    <p class="explain-text">
+                                        {{ result.logistic_regression.explanation.summary_text }}
+                                    </p>
+                                    <p class="explain-text highlight-explain">
+                                        {{ result.logistic_regression.explanation.remaining_explanation }}
+                                    </p>
+                                    <p class="explain-subtext">
+                                        <i class="fa-solid fa-database"></i> {{ result.logistic_regression.explanation.statistical_basis }}
+                                    </p>
+                                </div>
+                            </details>
+
+                            <details class="explain-details">
+                                <summary class="explain-summary">
+                                    <span><i class="fa-solid fa-list-check"></i> Feature Evidence (Model Weights)</span>
+                                    <i class="fa-solid fa-chevron-down summary-icon"></i>
+                                </summary>
+                                <div class="explain-body">
+                                    <div class="feature-group">
+                                        <span class="feature-group-title positive-text"><i class="fa-solid fa-plus-circle"></i> Positive Indicators:</span>
+                                        <div class="feature-chips">
+                                            {% if result.logistic_regression.positive_features %}
+                                                {% for f in result.logistic_regression.positive_features %}
+                                                    <span class="feature-chip pos-chip">+ {{ f.word }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="feature-none">No strong positive indicators in input</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="feature-group">
+                                        <span class="feature-group-title negative-text"><i class="fa-solid fa-minus-circle"></i> Negative Indicators:</span>
+                                        <div class="feature-chips">
+                                            {% if result.logistic_regression.negative_features %}
+                                                {% for f in result.logistic_regression.negative_features %}
+                                                    <span class="feature-chip neg-chip">- {{ f.word }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="feature-none">No strong negative indicators in input</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
                         </div>
+
                     </div>
 
                 </div>
@@ -211,9 +326,10 @@
                         <span class="agreement-badge {% if result.agreement.is_agree %}agree{% else %}disagree{% endif %}">
                             {{ result.agreement.status_label }}
                         </span>
-                        <span class="agreement-title">Model Agreement Analysis</span>
+                        <span class="agreement-title">Model Agreement & Confidence Analysis</span>
                     </div>
                     <p class="agreement-message">{{ result.agreement.message }}</p>
+                    <p class="agreement-diff"><i class="fa-solid fa-scale-balanced"></i> {{ result.agreement.diff_text }}</p>
                 </div>
 
                 <!-- Top 3 Similar Reviews Section -->
@@ -277,6 +393,56 @@
                 <h1 class="hero-heading">Model Performance</h1>
                 <p class="hero-sub">Compare two supervised learning approaches for Marathi sentiment classification.</p>
             </section>
+
+            <!-- Current Prediction Probability Distribution Table -->
+            <div class="comparison-table-wrap glass-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Prediction Probability Distribution (Active Input)</h2>
+                    <p class="panel-desc">Class probabilities predicted by each model for the active review input. Both probabilities sum to 100%.</p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Prediction</th>
+                                <th>Positive Probability</th>
+                                <th>Negative Probability</th>
+                                <th>Confidence Difference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Multinomial Naive Bayes</strong></td>
+                                <td><span class="badge-small {{ result.naive_bayes.sentiment|lower if result else 'positive' }}">{{ result.naive_bayes.sentiment if result else 'Positive' }}</span></td>
+                                <td><strong class="positive-text">{{ result.naive_bayes.pos_prob if result else '90.8' }}%</strong></td>
+                                <td><strong class="negative-text">{{ result.naive_bayes.neg_prob if result else '9.2' }}%</strong></td>
+                                <td rowspan="2" class="diff-cell">
+                                    {% if result %}
+                                        <strong>{{ result.agreement.diff_text }}</strong>
+                                    {% else %}
+                                        N/A (Submit a review)
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Logistic Regression</strong></td>
+                                <td><span class="badge-small {{ result.logistic_regression.sentiment|lower if result else 'positive' }}">{{ result.logistic_regression.sentiment if result else 'Positive' }}</span></td>
+                                <td><strong class="positive-text">{{ result.logistic_regression.pos_prob if result else '92.6' }}%</strong></td>
+                                <td><strong class="negative-text">{{ result.logistic_regression.neg_prob if result else '7.4' }}%</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="stat-note-box">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>
+                        <strong>Statistical Distinction:</strong> Individual input confidence represents the model's estimated probability for a single review (Positive % + Negative % = 100%). Overall Accuracy (~99.5%) is a dataset-level evaluation metric calculated across the 200-sample test set.
+                    </span>
+                </div>
+            </div>
 
             <!-- Metrics Summary Cards -->
             <div class="metrics-grid">
@@ -476,64 +642,7 @@
 
         </div>
 
-        <!-- ================================================================ -->
-        <!-- TAB 3: ABOUT THE MODEL PAGE -->
-        <!-- ================================================================ -->
-        <div id="tab-about" class="tab-content hidden fade-in">
-            <section class="hero-brand">
-                <div class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> System Architecture</div>
-                <h1 class="hero-heading">About the Models</h1>
-                <p class="hero-sub">Technical details of the classification pipelines and NLP feature extraction.</p>
-            </section>
 
-            <div class="architecture-grid">
-
-                <div class="arch-card glass-panel">
-                    <div class="arch-header">
-                        <span class="arch-badge primary">Primary Supervised Classifier</span>
-                        <h3>Multinomial Naive Bayes</h3>
-                    </div>
-                    <p>
-                        Used as the primary supervised classification algorithm. Multinomial Naive Bayes calculates class probabilities
-                        using Bayes' theorem assuming feature independence. It is highly efficient for text classification with TF-IDF features.
-                    </p>
-                </div>
-
-                <div class="arch-card glass-panel">
-                    <div class="arch-header">
-                        <span class="arch-badge secondary">Secondary Supervised Classifier</span>
-                        <h3>Logistic Regression</h3>
-                    </div>
-                    <p>
-                        Used as a second supervised classification algorithm for comparison. Logistic Regression models the probability
-                        of binary outcomes using a sigmoid function over a linear combination of TF-IDF feature weights.
-                    </p>
-                </div>
-
-                <div class="arch-card glass-panel">
-                    <div class="arch-header">
-                        <span class="arch-badge neutral">Feature Extraction</span>
-                        <h3>TF-IDF Vectorizer</h3>
-                    </div>
-                    <p>
-                        Converts Marathi text into numerical features for machine learning. TF-IDF evaluates word frequency in a review
-                        relative to word distribution across the dataset to weight key sentiment-bearing terms.
-                    </p>
-                </div>
-
-                <div class="arch-card glass-panel">
-                    <div class="arch-header">
-                        <span class="arch-badge neutral">NLP Feature</span>
-                        <h3>Cosine Similarity</h3>
-                    </div>
-                    <p>
-                        Measures similarity between the TF-IDF representation of the user's review and reviews in the dataset.
-                        Retrieves the top 3 dataset matches for contextual review comparison.
-                    </p>
-                </div>
-
-            </div>
-        </div>
 
     </main>
 
