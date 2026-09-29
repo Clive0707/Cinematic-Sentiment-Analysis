@@ -45,12 +45,28 @@ def test_all():
     print("Message :", result["agreement"]["message"])
     print("Diff    :", result["agreement"]["diff_text"])
 
+    print("\n--- Testing Critical Negation Case: 'हा चित्रपट वाईट नाही.' ---")
+    neg_case = "हा चित्रपट वाईट नाही."
+    res_neg = predict_sentiment(neg_case)
+    print("Review:", res_neg["review_text"])
+    print("MNB Prediction:", res_neg["naive_bayes"]["sentiment"], f"(Pos {res_neg['naive_bayes']['pos_prob']}%, Neg {res_neg['naive_bayes']['neg_prob']}%)")
+    print("LR  Prediction:", res_neg["logistic_regression"]["sentiment"], f"(Pos {res_neg['logistic_regression']['pos_prob']}%, Neg {res_neg['logistic_regression']['neg_prob']}%)")
+    print("Model Agreement:", res_neg["agreement"]["status_label"])
+    assert res_neg["naive_bayes"]["sentiment"] == "Positive", f"MNB failed on '{neg_case}'"
+    assert res_neg["logistic_regression"]["sentiment"] == "Positive", f"LR failed on '{neg_case}'"
+    print("✓ Critical Negation Case Passed: Both models naturally predict Positive!")
+
     print("\n--- Testing Multiple Review Types ---")
     test_reviews = [
         ("Strong Positive", "चित्रपटाची कथा खूप छान होती, दिग्दर्शन आणि अभिनय उत्तम झाला आहे. सर्वांनी नक्की पाहावा असा चित्रपट!"),
         ("Strong Negative", "इतका रटाळ चित्रपट खूप दिवसांनी पाहिला. वेळेचा आणि पैशांचा पूर्णपणे अपव्यय झाला. अजिबात आवडला नाही."),
         ("Mixed Review", "चित्रपटाची कथा खूप छान होती पण शेवट थोडा कमजोर वाटला."),
         ("Short Review", "उत्कृष्ट चित्रपट"),
+        ("Negation Positive 2", "कथा अजिबात कंटाळवाणी नाही."),
+        ("Negation Positive 3", "चित्रपटाने निराश केले नाही."),
+        ("Negation Negative 1", "हा चित्रपट चांगला नाही."),
+        ("Negation Negative 2", "अभिनय उत्कृष्ट वाटला नाही."),
+        ("Contrast Hard Case", "सुरुवात थोडी कंटाळवाणी आहे, पण पुढे कथा इतकी सुंदर उलगडते आणि क्लायमॅक्स थक्क करून सोडतो."),
     ]
 
     for label, rev in test_reviews:

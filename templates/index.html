@@ -439,7 +439,7 @@
                 <div class="stat-note-box">
                     <i class="fa-solid fa-circle-info"></i>
                     <span>
-                        <strong>Statistical Distinction:</strong> Individual input confidence represents the model's estimated probability for a single review (Positive % + Negative % = 100%). Overall Accuracy (~99.5%) is a dataset-level evaluation metric calculated across the 200-sample test set.
+                        <strong>Statistical Distinction:</strong> Individual input confidence represents the model's estimated probability for a single review (Positive % + Negative % = 100%). Overall Accuracy (~98.2%) is a dataset-level evaluation metric calculated across the 1,200-sample test set from the 6,000-row dataset with negation and contrast hard-cases.
                     </span>
                 </div>
             </div>
@@ -449,29 +449,29 @@
                 <div class="metric-card glass-panel">
                     <div class="metric-icon"><i class="fa-solid fa-brain"></i></div>
                     <span class="metric-label">Naive Bayes Accuracy</span>
-                    <div class="metric-value">{{ metrics.naive_bayes.accuracy if metrics else '99.50' }}%</div>
+                    <div class="metric-value">{{ metrics.naive_bayes.accuracy if metrics else '97.50' }}%</div>
                     <span class="metric-tag">Primary Classifier</span>
                 </div>
 
                 <div class="metric-card glass-panel">
                     <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
                     <span class="metric-label">Logistic Regression Accuracy</span>
-                    <div class="metric-value">{{ metrics.logistic_regression.accuracy if metrics else '99.00' }}%</div>
+                    <div class="metric-value">{{ metrics.logistic_regression.accuracy if metrics else '98.92' }}%</div>
                     <span class="metric-tag">Secondary Classifier</span>
                 </div>
 
                 <div class="metric-card glass-panel">
                     <div class="metric-icon"><i class="fa-solid fa-layer-group"></i></div>
-                    <span class="metric-label">TF-IDF Vocabulary Size</span>
-                    <div class="metric-value">{{ metrics.vocab_size if metrics else '1,000+' }}</div>
-                    <span class="metric-tag">Feature Features</span>
+                    <span class="metric-label">Combined TF-IDF Features</span>
+                    <div class="metric-value">{{ metrics.vocab_size if metrics else '9,198' }}</div>
+                    <span class="metric-tag">Word (1-2) + Char (3-5)</span>
                 </div>
 
                 <div class="metric-card glass-panel">
                     <div class="metric-icon"><i class="fa-solid fa-vials"></i></div>
                     <span class="metric-label">Test Evaluation Samples</span>
-                    <div class="metric-value">{{ metrics.test_samples if metrics else '200' }}</div>
-                    <span class="metric-tag">20% Stratified Split</span>
+                    <div class="metric-value">{{ metrics.test_samples if metrics else '1,200' }}</div>
+                    <span class="metric-tag">20% Stratified Split (of 6,000)</span>
                 </div>
             </div>
 
@@ -479,7 +479,7 @@
             <div class="comparison-table-wrap glass-panel">
                 <div class="panel-header">
                     <h2 class="panel-title"><i class="fa-solid fa-table-list"></i> Comprehensive Metric Comparison Table</h2>
-                    <p class="panel-desc">Metrics evaluated on test set using 80/20 stratified split with exact TF-IDF feature space.</p>
+                    <p class="panel-desc">Metrics evaluated on test set using 80/20 stratified split (1,200 test reviews) with combined word (1-2) and character (3-5) TF-IDF features.</p>
                 </div>
 
                 <div class="table-responsive">
@@ -501,26 +501,26 @@
                             </tr>
                             <tr>
                                 <td><strong>Accuracy</strong></td>
-                                <td><strong class="highlight-val">{{ metrics.naive_bayes.accuracy if metrics else '99.50' }}%</strong></td>
-                                <td><strong class="highlight-val">{{ metrics.logistic_regression.accuracy if metrics else '99.00' }}%</strong></td>
+                                <td><strong class="highlight-val">{{ metrics.naive_bayes.accuracy if metrics else '97.50' }}%</strong></td>
+                                <td><strong class="highlight-val">{{ metrics.logistic_regression.accuracy if metrics else '98.92' }}%</strong></td>
                                 <td>Overall Classification Correctness</td>
                             </tr>
                             <tr>
                                 <td><strong>Precision</strong></td>
-                                <td><strong class="highlight-val">{{ metrics.naive_bayes.precision if metrics else '100.00' }}%</strong></td>
-                                <td><strong class="highlight-val">{{ metrics.logistic_regression.precision if metrics else '100.00' }}%</strong></td>
+                                <td><strong class="highlight-val">{{ metrics.naive_bayes.precision if metrics else '99.48' }}%</strong></td>
+                                <td><strong class="highlight-val">{{ metrics.logistic_regression.precision if metrics else '99.66' }}%</strong></td>
                                 <td>Positive Predictive Power</td>
                             </tr>
                             <tr>
                                 <td><strong>Recall</strong></td>
-                                <td><strong class="highlight-val">{{ metrics.naive_bayes.recall if metrics else '99.00' }}%</strong></td>
-                                <td><strong class="highlight-val">{{ metrics.logistic_regression.recall if metrics else '98.00' }}%</strong></td>
+                                <td><strong class="highlight-val">{{ metrics.naive_bayes.recall if metrics else '95.50' }}%</strong></td>
+                                <td><strong class="highlight-val">{{ metrics.logistic_regression.recall if metrics else '98.17' }}%</strong></td>
                                 <td>True Positive Sensitivity</td>
                             </tr>
                             <tr>
                                 <td><strong>F1 Score</strong></td>
-                                <td><strong class="highlight-val">{{ metrics.naive_bayes.f1_score if metrics else '99.50' }}%</strong></td>
-                                <td><strong class="highlight-val">{{ metrics.logistic_regression.f1_score if metrics else '98.99' }}%</strong></td>
+                                <td><strong class="highlight-val">{{ metrics.naive_bayes.f1_score if metrics else '97.45' }}%</strong></td>
+                                <td><strong class="highlight-val">{{ metrics.logistic_regression.f1_score if metrics else '98.91' }}%</strong></td>
                                 <td>Harmonic Mean of Precision & Recall</td>
                             </tr>
                         </tbody>
@@ -546,16 +546,16 @@
                             <div class="bar-item">
                                 <span class="bar-name">Naive Bayes</span>
                                 <div class="bar-track">
-                                    <div class="bar-fill nb-bar" style="width: {{ metrics.naive_bayes.accuracy if metrics else '99.5' }}%;">
-                                        <span class="bar-val">{{ metrics.naive_bayes.accuracy if metrics else '99.50' }}%</span>
+                                    <div class="bar-fill nb-bar" style="width: {{ metrics.naive_bayes.accuracy if metrics else '97.5' }}%;">
+                                        <span class="bar-val">{{ metrics.naive_bayes.accuracy if metrics else '97.50' }}%</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="bar-item">
                                 <span class="bar-name">Logistic Regression</span>
                                 <div class="bar-track">
-                                    <div class="bar-fill lr-bar" style="width: {{ metrics.logistic_regression.accuracy if metrics else '99.0' }}%;">
-                                        <span class="bar-val">{{ metrics.logistic_regression.accuracy if metrics else '99.00' }}%</span>
+                                    <div class="bar-fill lr-bar" style="width: {{ metrics.logistic_regression.accuracy if metrics else '98.92' }}%;">
+                                        <span class="bar-val">{{ metrics.logistic_regression.accuracy if metrics else '98.92' }}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -571,16 +571,16 @@
                             <div class="bar-item">
                                 <span class="bar-name">Naive Bayes</span>
                                 <div class="bar-track">
-                                    <div class="bar-fill nb-bar" style="width: {{ metrics.naive_bayes.precision if metrics else '100.0' }}%;">
-                                        <span class="bar-val">{{ metrics.naive_bayes.precision if metrics else '100.00' }}%</span>
+                                    <div class="bar-fill nb-bar" style="width: {{ metrics.naive_bayes.precision if metrics else '99.48' }}%;">
+                                        <span class="bar-val">{{ metrics.naive_bayes.precision if metrics else '99.48' }}%</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="bar-item">
                                 <span class="bar-name">Logistic Regression</span>
                                 <div class="bar-track">
-                                    <div class="bar-fill lr-bar" style="width: {{ metrics.logistic_regression.precision if metrics else '100.0' }}%;">
-                                        <span class="bar-val">{{ metrics.logistic_regression.precision if metrics else '100.00' }}%</span>
+                                    <div class="bar-fill lr-bar" style="width: {{ metrics.logistic_regression.precision if metrics else '99.66' }}%;">
+                                        <span class="bar-val">{{ metrics.logistic_regression.precision if metrics else '99.66' }}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -596,16 +596,16 @@
                             <div class="bar-item">
                                 <span class="bar-name">Naive Bayes</span>
                                 <div class="bar-track">
-                                    <div class="bar-fill nb-bar" style="width: {{ metrics.naive_bayes.recall if metrics else '99.0' }}%;">
-                                        <span class="bar-val">{{ metrics.naive_bayes.recall if metrics else '99.00' }}%</span>
+                                    <div class="bar-fill nb-bar" style="width: {{ metrics.naive_bayes.recall if metrics else '95.5' }}%;">
+                                        <span class="bar-val">{{ metrics.naive_bayes.recall if metrics else '95.50' }}%</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="bar-item">
                                 <span class="bar-name">Logistic Regression</span>
                                 <div class="bar-track">
-                                    <div class="bar-fill lr-bar" style="width: {{ metrics.logistic_regression.recall if metrics else '98.0' }}%;">
-                                        <span class="bar-val">{{ metrics.logistic_regression.recall if metrics else '98.00' }}%</span>
+                                    <div class="bar-fill lr-bar" style="width: {{ metrics.logistic_regression.recall if metrics else '98.17' }}%;">
+                                        <span class="bar-val">{{ metrics.logistic_regression.recall if metrics else '98.17' }}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -621,22 +621,114 @@
                             <div class="bar-item">
                                 <span class="bar-name">Naive Bayes</span>
                                 <div class="bar-track">
-                                    <div class="bar-fill nb-bar" style="width: {{ metrics.naive_bayes.f1_score if metrics else '99.5' }}%;">
-                                        <span class="bar-val">{{ metrics.naive_bayes.f1_score if metrics else '99.50' }}%</span>
+                                    <div class="bar-fill nb-bar" style="width: {{ metrics.naive_bayes.f1_score if metrics else '97.45' }}%;">
+                                        <span class="bar-val">{{ metrics.naive_bayes.f1_score if metrics else '97.45' }}%</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="bar-item">
                                 <span class="bar-name">Logistic Regression</span>
                                 <div class="bar-track">
-                                    <div class="bar-fill lr-bar" style="width: {{ metrics.logistic_regression.f1_score if metrics else '98.99' }}%;">
-                                        <span class="bar-val">{{ metrics.logistic_regression.f1_score if metrics else '98.99' }}%</span>
+                                    <div class="bar-fill lr-bar" style="width: {{ metrics.logistic_regression.f1_score if metrics else '98.91' }}%;">
+                                        <span class="bar-val">{{ metrics.logistic_regression.f1_score if metrics else '98.91' }}%</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                </div>
+            </div>
+
+            <!-- Negation Diagnostic Benchmark Section -->
+            <div class="comparison-table-wrap glass-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-solid fa-vial-circle-check"></i> Negation & Contrast Diagnostic Benchmark Cases</h2>
+                    <p class="panel-desc">Evaluation of both models on critical Marathi negation patterns, contrast structures, and mixed-sentiment expressions.</p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Diagnostic Expression (Marathi)</th>
+                                <th>Category</th>
+                                <th>Expected</th>
+                                <th>Naive Bayes Output</th>
+                                <th>Logistic Regression Output</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if metrics and metrics.error_analysis and metrics.error_analysis.diagnostic_cases %}
+                                {% for case in metrics.error_analysis.diagnostic_cases %}
+                                <tr>
+                                    <td class="marathi-text"><strong>"{{ case.text }}"</strong></td>
+                                    <td><span class="badge-tag">{{ case.type }}</span></td>
+                                    <td><span class="badge-small {{ case.expected|lower }}">{{ case.expected }}</span></td>
+                                    <td>
+                                        <span class="badge-small {{ case.nb_prediction|lower }}">{{ case.nb_prediction }}</span>
+                                        <span class="prob-subtext">{{ case.nb_pos_prob }}% Pos</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-small {{ case.lr_prediction|lower }}">{{ case.lr_prediction }}</span>
+                                        <span class="prob-subtext">{{ case.lr_pos_prob }}% Pos</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5">Diagnostic results available in metrics.json</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Test Set Error Analysis Section -->
+            <div class="comparison-table-wrap glass-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Test Set Error Analysis (Misclassifications)</h2>
+                    <p class="panel-desc">Real misclassifications from the unseen 1,200-sample test set ({{ metrics.error_analysis.total_errors if metrics and metrics.error_analysis else '32' }} errors out of 1,200 test reviews; {{ metrics.error_analysis.negation_errors if metrics and metrics.error_analysis else '29' }} involve negation, {{ metrics.error_analysis.contrast_errors if metrics and metrics.error_analysis else '1' }} involve contrast).</p>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="comparison-table error-table">
+                        <thead>
+                            <tr>
+                                <th>Test Review Text</th>
+                                <th>Actual Sentiment</th>
+                                <th>Naive Bayes</th>
+                                <th>Logistic Regression</th>
+                                <th>Linguistic Characteristic</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if metrics and metrics.error_analysis and metrics.error_analysis.error_samples %}
+                                {% for err in metrics.error_analysis.error_samples[:10] %}
+                                <tr>
+                                    <td class="marathi-text error-review-cell">"{{ err.review }}"</td>
+                                    <td><span class="badge-small {{ err.actual|lower }}">{{ err.actual }}</span></td>
+                                    <td><span class="badge-small {{ err.nb_pred|lower }}">{{ err.nb_pred }}</span></td>
+                                    <td><span class="badge-small {{ err.lr_pred|lower }}">{{ err.lr_pred }}</span></td>
+                                    <td>
+                                        {% if err.contains_negation %}
+                                            <span class="badge-neg-yes"><i class="fa-solid fa-ban"></i> Negation</span>
+                                        {% elif err.contains_contrast %}
+                                            <span class="badge-contrast-yes"><i class="fa-solid fa-code-fork"></i> Contrast</span>
+                                        {% else %}
+                                            <span class="badge-neg-no">Standard</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5">No test set errors found.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

@@ -1,27 +1,360 @@
 {
   "naive_bayes": {
     "name": "Multinomial Naive Bayes",
-    "accuracy": 99.5,
-    "precision": 100.0,
-    "recall": 99.0,
-    "f1_score": 99.5,
-    "raw_accuracy": 0.995,
-    "raw_precision": 1.0,
-    "raw_recall": 0.99,
-    "raw_f1_score": 0.9949748743718593
+    "accuracy": 97.5,
+    "precision": 99.48,
+    "recall": 95.5,
+    "f1_score": 97.45,
+    "confusion_matrix": [
+      [
+        597,
+        3
+      ],
+      [
+        27,
+        573
+      ]
+    ],
+    "raw_accuracy": 0.975,
+    "raw_precision": 0.9947916666666666,
+    "raw_recall": 0.955,
+    "raw_f1_score": 0.9744897959183674
   },
   "logistic_regression": {
     "name": "Logistic Regression",
-    "accuracy": 99.0,
-    "precision": 100.0,
-    "recall": 98.0,
-    "f1_score": 98.99,
-    "raw_accuracy": 0.99,
-    "raw_precision": 1.0,
-    "raw_recall": 0.98,
-    "raw_f1_score": 0.98989898989899
+    "accuracy": 98.92,
+    "precision": 99.66,
+    "recall": 98.17,
+    "f1_score": 98.91,
+    "confusion_matrix": [
+      [
+        598,
+        2
+      ],
+      [
+        11,
+        589
+      ]
+    ],
+    "raw_accuracy": 0.9891666666666666,
+    "raw_precision": 0.9966159052453468,
+    "raw_recall": 0.9816666666666667,
+    "raw_f1_score": 0.9890848026868178
   },
-  "test_samples": 200,
-  "train_samples": 800,
-  "vocab_size": 172
+  "test_samples": 1200,
+  "train_samples": 4800,
+  "word_vocab_size": 3237,
+  "char_vocab_size": 5961,
+  "vocab_size": 9198,
+  "ngram_range": "Word (1-2), Char (3-5)",
+  "dataset_name": "marathi_movie_reviews_6000_negation_hardcases.csv",
+  "total_dataset_rows": 6000,
+  "error_analysis": {
+    "total_test_samples": 1200,
+    "total_errors": 32,
+    "negation_errors": 29,
+    "contrast_errors": 1,
+    "mixed_errors": 29,
+    "error_samples": [
+      {
+        "review": "चित्रपटमध्ये काहीही निरस वाटत नाही; कथानक खूप रंजक आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "कथामध्ये काहीही वाईट वाटत नाही; पटकथा खूप आकर्षक आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "या कलाकृतीमध्ये काहीही निराशाजनक वाटत नाही; शेवट खूप उत्तम आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "संपूर्ण मांडणीमध्ये काहीही अप्रभावी वाटत नाही; शेवट खूप रंजक आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "कथानकमध्ये काहीही कंटाळवाणा वाटत नाही; विनोदी प्रसंग खूप आकर्षक आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "या कलाकृतीमध्ये काहीही फिका वाटत नाही; कथा खूप उत्तम आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "कथामध्ये काहीही निरस वाटत नाही; संगीत खूप उत्तम आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "कथामध्ये काहीही कंटाळवाणा वाटत नाही; भावनिक सादरीकरण खूप उत्कृष्ट आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "या कलाकृतीमध्ये काहीही फिका वाटत नाही; विनोदी प्रसंग खूप उत्कृष्ट आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "संपूर्ण मांडणीमध्ये काहीही कंटाळवाणा वाटत नाही; पार्श्वसंगीत खूप आकर्षक आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "एकदम टुकार सिनेमा आहे भाऊ.",
+        "actual": "Negative",
+        "nb_pred": "Positive",
+        "lr_pred": "Positive",
+        "contains_negation": false,
+        "contains_contrast": false,
+        "is_mixed": false
+      },
+      {
+        "review": "अजिबात नका बघू हा सिनेमा.",
+        "actual": "Negative",
+        "nb_pred": "Positive",
+        "lr_pred": "Positive",
+        "contains_negation": false,
+        "contains_contrast": false,
+        "is_mixed": false
+      },
+      {
+        "review": "संगीत त्रासदायक नाही, गाणी कथेला छान साथ देतात. त्यामुळे एकूण अनुभव खूप चांगला झाला.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "चित्रपटमध्ये काहीही निराशाजनक वाटत नाही; कथा खूप उत्कृष्ट आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "संपूर्ण मांडणीमध्ये काहीही निराशाजनक वाटत नाही; भावनिक सादरीकरण खूप आकर्षक आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "कथानकमध्ये काहीही फिका वाटत नाही; शेवट खूप मनमोहक आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "संपूर्ण मांडणीमध्ये काहीही निराशाजनक वाटत नाही; पटकथा खूप उत्तम आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "हा सिनेमा वाईट नाही असे वाटावे अशी सुरुवात झाली, पण पुढे तो खूप कंटाळवाणा झाला. त्यामुळे एकूण अनुभव निराशाजनक झाला.",
+        "actual": "Negative",
+        "nb_pred": "Positive",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": true,
+        "is_mixed": true
+      },
+      {
+        "review": "हा चित्रपट निराश करणारा नाही; एकूण अनुभव चांगला आहे. त्यामुळे एकूण अनुभव खूप चांगला झाला.",
+        "actual": "Positive",
+        "nb_pred": "Positive",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "कथामध्ये काहीही कमकुवत वाटत नाही; दिग्दर्शन खूप आकर्षक आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "कथामध्ये काहीही निरस वाटत नाही; भावनिक सादरीकरण खूप उत्तम आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "या कलाकृतीमध्ये काहीही कंटाळवाणा वाटत नाही; पटकथा खूप उत्तम आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "संपूर्ण मांडणीमध्ये काहीही कंटाळवाणा वाटत नाही; कथा खूप प्रभावी आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "संपूर्ण मांडणीमध्ये काहीही अप्रभावी वाटत नाही; पार्श्वसंगीत खूप प्रभावी आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Negative",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      },
+      {
+        "review": "संपूर्ण मांडणीमध्ये काहीही अप्रभावी वाटत नाही; मांडणी खूप अप्रतिम आहे.",
+        "actual": "Positive",
+        "nb_pred": "Negative",
+        "lr_pred": "Positive",
+        "contains_negation": true,
+        "contains_contrast": false,
+        "is_mixed": true
+      }
+    ],
+    "diagnostic_cases": [
+      {
+        "text": "हा चित्रपट वाईट नाही.",
+        "expected": "Positive",
+        "type": "Negation (Positive)",
+        "nb_prediction": "Positive",
+        "nb_pos_prob": 100.0,
+        "lr_prediction": "Positive",
+        "lr_pos_prob": 91.9
+      },
+      {
+        "text": "कथा अजिबात कंटाळवाणी नाही.",
+        "expected": "Positive",
+        "type": "Negation (Positive)",
+        "nb_prediction": "Positive",
+        "nb_pos_prob": 100.0,
+        "lr_prediction": "Positive",
+        "lr_pos_prob": 93.5
+      },
+      {
+        "text": "चित्रपटाने निराश केले नाही.",
+        "expected": "Positive",
+        "type": "Negation (Positive)",
+        "nb_prediction": "Positive",
+        "nb_pos_prob": 100.0,
+        "lr_prediction": "Positive",
+        "lr_pos_prob": 97.2
+      },
+      {
+        "text": "हा चित्रपट चांगला नाही.",
+        "expected": "Negative",
+        "type": "Negation (Negative)",
+        "nb_prediction": "Negative",
+        "nb_pos_prob": 0.0,
+        "lr_prediction": "Negative",
+        "lr_pos_prob": 18.9
+      },
+      {
+        "text": "अभिनय उत्कृष्ट वाटला नाही.",
+        "expected": "Negative",
+        "type": "Negation (Negative)",
+        "nb_prediction": "Negative",
+        "nb_pos_prob": 0.0,
+        "lr_prediction": "Negative",
+        "lr_pos_prob": 15.3
+      },
+      {
+        "text": "शेवट समाधानकारक नव्हता.",
+        "expected": "Negative",
+        "type": "Negation (Negative)",
+        "nb_prediction": "Negative",
+        "nb_pos_prob": 5.8,
+        "lr_prediction": "Positive",
+        "lr_pos_prob": 52.7
+      },
+      {
+        "text": "कथा सुंदर आहे पण पटकथा थोडी संथ आहे.",
+        "expected": "Positive",
+        "type": "Mixed Sentiment",
+        "nb_prediction": "Negative",
+        "nb_pos_prob": 35.6,
+        "lr_prediction": "Negative",
+        "lr_pos_prob": 49.7
+      },
+      {
+        "text": "सुरुवात थोडी कंटाळवाणी आहे, पण पुढे कथा इतकी सुंदर उलगडते आणि क्लायमॅक्स थक्क करून सोडतो.",
+        "expected": "Positive",
+        "type": "Contrast (Negative -> Positive)",
+        "nb_prediction": "Positive",
+        "nb_pos_prob": 100.0,
+        "lr_prediction": "Positive",
+        "lr_pos_prob": 96.2
+      }
+    ]
+  }
 }

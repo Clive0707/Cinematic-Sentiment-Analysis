@@ -13,16 +13,20 @@ import json
 import os
 import pickle
 
+import numpy as np
 import pandas as pd
+from scipy.sparse import hstack
 from sklearn.metrics.pairwise import cosine_similarity
 
 from preprocess import preprocess_corpus, preprocess_text
 
 NB_MODEL_PATH = os.path.join("models", "sentiment_model.pkl")
 LR_MODEL_PATH = os.path.join("models", "logistic_regression_model.pkl")
+WORD_VECTORIZER_PATH = os.path.join("models", "word_vectorizer.pkl")
+CHAR_VECTORIZER_PATH = os.path.join("models", "char_vectorizer.pkl")
 VECTORIZER_PATH = os.path.join("models", "tfidf_vectorizer.pkl")
 METRICS_PATH = os.path.join("models", "metrics.json")
-DATASET_PATH = os.path.join("dataset", "marathi_movie_reviews.csv")
+DATASET_PATH = os.path.join("dataset", "marathi_movie_reviews_6000_negation_hardcases.csv")
 
 # Emoji labels for visual UI rendering
 SENTIMENT_EMOJI = {
@@ -38,24 +42,28 @@ class SentimentPredictor:
         self,
         nb_path: str = NB_MODEL_PATH,
         lr_path: str = LR_MODEL_PATH,
-        vectorizer_path: str = VECTORIZER_PATH,
+        word_vectorizer_path: str = WORD_VECTORIZER_PATH,
+        char_vectorizer_path: str = CHAR_VECTORIZER_PATH,
         metrics_path: str = METRICS_PATH,
     ):
         self.nb_path = nb_path
         self.lr_path = lr_path
-        self.vectorizer_path = vectorizer_path
+        self.word_vectorizer_path = word_vectorizer_path
+        self.char_vectorizer_path = char_vectorizer_path
         self.metrics_path = metrics_path
 
         self.nb_model = None
         self.lr_model = None
-        self.vectorizer = None
+        self.word_vectorizer = None
+        self.char_vectorizer = None
+        self.vectorizer = None  # Backward compatibility reference
         self.metrics = None
         self.dataset_reviews = []
         self.dataset_sentiments = []
         self.dataset_tfidf = None
 
     def load(self) -> None:
-        """Load NB model, LR model, vectorizer, metrics, and build dataset TF-IDF matrix."""
+        """Load NB model, LR model, word & char vectorizers, metrics, and build dataset TF-IDF matrix."""
         if not os.path.exists(self.nb_path):
             raise FileNotFoundError(
                 f"Naive Bayes model not found at '{self.nb_path}'. Run train_model.py first."
@@ -64,9 +72,13 @@ class SentimentPredictor:
             raise FileNotFoundError(
                 f"Logistic Regression model not found at '{self.lr_path}'. Run train_model.py first."
             )
-        if not os.path.exists(self.vectorizer_path):
+        if not os.path.exists(self.word_vectorizer_path):
             raise FileNotFoundError(
-                f"Vectorizer not found at '{self.vectorizer_path}'. Run train_model.py first."
+                f"Word vectorizer not found at '{self.word_vectorizer_path}'. Run train_model.py first."
+            )
+        if not os.path.exists(self.char_vectorizer_path):
+            raise FileNotFoundError(
+                f"Char vectorizer not found at '{self.char_vectorizer_path}'. Run train_model.py first."
             )
 
         with open(self.nb_path, "rb") as file:
@@ -75,14 +87,26 @@ class SentimentPredictor:
         with open(self.lr_path, "rb") as file:
             self.lr_model = pickle.load(file)
 
-        with open(self.vectorizer_path, "rb") as file:
-            self.vectorizer = pickle.load(file)
+        with open(self.word_vectorizer_path, "rb") as file:
+            self.word_vectorizer = pickle.load(file)
+
+        with open(self.char_vectorizer_path, "rb") as file:
+            self.char_vectorizer = pickle.load(file)
+
+        self.vectorizer = self.word_vectorizer
 
         if os.path.exists(self.metrics_path):
             with open(self.metrics_path, "r", encoding="utf-8") as file:
                 self.metrics = json.load(file)
 
         self._load_dataset_vectors()
+
+    def transform_text(self, text: str):
+        """Preprocess and transform text into combined word + char TF-IDF sparse matrix."""
+        cleaned = preprocess_text(text)
+        w_feat = self.word_vectorizer.transform([cleaned])
+        c_feat = self.char_vectorizer.transform([cleaned])
+        return hstack([w_feat, c_feat]).tocsr()
 
     def _load_dataset_vectors(self) -> None:
         """Build TF-IDF matrix for the dataset for cosine similarity search."""
@@ -96,18 +120,22 @@ class SentimentPredictor:
         self.dataset_sentiments = df["Sentiment"].astype(str).str.strip().tolist()
 
         cleaned_corpus = preprocess_corpus(self.dataset_reviews)
-        self.dataset_tfidf = self.vectorizer.transform(cleaned_corpus)
+        w_corpus = self.word_vectorizer.transform(cleaned_corpus)
+        c_corpus = self.char_vectorizer.transform(cleaned_corpus)
+        self.dataset_tfidf = hstack([w_corpus, c_corpus]).tocsr()
 
-    def _extract_feature_contributions(self, model, features, model_type: str) -> dict:
+    def _extract_feature_contributions(self, model, combined_features, model_type: str) -> dict:
         """
         Extract positive and negative feature contributions present in the review text.
-        Derived from actual model parameters (feature_log_prob_ for MNB, coef_ for LR).
+        Derived from actual model parameters (feature_log_prob_ for MNB, coef_ for LR)
+        filtered to word-level and phrase features for human-readable explanation.
         """
-        if self.vectorizer is None:
+        if self.word_vectorizer is None:
             return {"positive_features": [], "negative_features": []}
 
-        feature_names = self.vectorizer.get_feature_names_out()
-        nonzero_indices = features.nonzero()[1]
+        word_feature_names = self.word_vectorizer.get_feature_names_out()
+        n_word_features = len(word_feature_names)
+        nonzero_indices = combined_features.nonzero()[1]
 
         if len(nonzero_indices) == 0:
             return {"positive_features": [], "negative_features": []}
@@ -119,9 +147,13 @@ class SentimentPredictor:
         pos_features = []
         neg_features = []
 
+        # Only display human-readable word and phrase tokens that appear in the review
         for idx in nonzero_indices:
-            word = feature_names[idx]
-            tfidf_weight = float(features[0, idx])
+            if idx >= n_word_features:
+                continue
+
+            word = word_feature_names[idx]
+            tfidf_weight = float(combined_features[0, idx])
 
             if model_type == "naive_bayes":
                 # Difference in log probability between Positive and Negative classes
@@ -133,7 +165,8 @@ class SentimentPredictor:
                 coef = model.coef_[0, idx] if pos_idx == 1 else -model.coef_[0, idx]
                 score = tfidf_weight * float(coef)
 
-            entry = {"word": word, "score": round(score, 4), "weight": round(abs(score), 4)}
+            score_float = float(round(score, 4))
+            entry = {"word": str(word), "score": score_float, "weight": abs(score_float)}
             if score > 0:
                 pos_features.append(entry)
             elif score < 0:
@@ -241,11 +274,18 @@ class SentimentPredictor:
             Dictionary containing independent model outputs, agreement status,
             similar reviews, and model metrics.
         """
-        if self.nb_model is None or self.lr_model is None or self.vectorizer is None:
+        if (
+            self.nb_model is None
+            or self.lr_model is None
+            or self.word_vectorizer is None
+            or self.char_vectorizer is None
+        ):
             raise RuntimeError("Models not loaded. Call load() before predict().")
 
         cleaned = preprocess_text(review)
-        features = self.vectorizer.transform([cleaned])
+        w_feat = self.word_vectorizer.transform([cleaned])
+        c_feat = self.char_vectorizer.transform([cleaned])
+        features = hstack([w_feat, c_feat]).tocsr()
 
         # 1. Naive Bayes Independent Prediction
         nb_result = self._predict_single_model(self.nb_model, features, "naive_bayes")

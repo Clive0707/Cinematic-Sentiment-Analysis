@@ -4,6 +4,9 @@ Flask web application for Marathi movie review sentiment analysis.
 Loads pre-trained Multinomial Naive Bayes and Logistic Regression models.
 """
 
+import os
+import socket
+
 from flask import Flask, Response, jsonify, render_template, request
 
 from pdf_generator import generate_sentiment_pdf
@@ -75,5 +78,13 @@ def download_pdf():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    import socket
+    port = int(os.environ.get("PORT", 5000))
+    # If default port 5000 is already in use by another local process, use 5001
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if s.connect_ex(("127.0.0.1", port)) == 0 and "PORT" not in os.environ:
+            port = 5001
+
+    print(f"Starting Marathi Sentiment Analysis server on http://127.0.0.1:{port}...")
+    app.run(debug=True, host="0.0.0.0", port=port)
 
